@@ -6,7 +6,7 @@ A portable and retargetable assembler.
 * [example](https://www.youtube.com/watch?v=oO8_2JJV0B4&ab_channel=BenEater)
 
 ## 1. Setup with Visual Studio 2017
-![Developer Command Prompt for VS2017](../img/Developer%20Command%20Prompt%20for%20VS2017.jpg)
+![Developer Command Prompt for VS2017](./img/Developer%20Command%20Prompt%20for%20VS2017.jpg)
 ```sh
 E:\workspace_asm\vasm\>mkdir obj_win32
 E:\workspace_asm\vasm\>nmake /f Makefile.Win32 CPU=6502 SYNTAX=oldstyle
@@ -25,8 +25,8 @@ $ ll *.out
 
 ## 2. Inspect with the hex editor:
 1. _Right-click_ > Open With..
-   ![Open With](../img/OpenWithHexEditor_01.jpg)
+   ![Open With](./img/OpenWithHexEditor_01.jpg)
 2. Select the _Hex Editor_
-   ![Select _Hex Editor_](../img/OpenWithHexEditor_02.jpg)
+   ![Select _Hex Editor_](./img/OpenWithHexEditor_02.jpg)
 3. The _Hex Editor_
-   ![_Hex Editor_](../img/OpenWithHexEditor_03.jpg)
+   ![_Hex Editor_](./img/OpenWithHexEditor_03.jpg)
