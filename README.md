@@ -4,6 +4,8 @@ A portable and retargetable assembler.
 * [Compilation Instructions](http://sun.hasenbraten.de/vasm/index.php?view=compile)
 * [vasm docs](http://sun.hasenbraten.de/vasm/release/vasm.html)
 * [example](https://www.youtube.com/watch?v=oO8_2JJV0B4&ab_channel=BenEater)
+* [minipro](https://gitlab.com/DavidGriffith/minipro)
+* [XGecu](http://www.xgecu.com/en/download.html)
 
 ## 1. Setup with Visual Studio 2017
 ![Developer Command Prompt for VS2017](./img/Developer%20Command%20Prompt%20for%20VS2017.jpg)
