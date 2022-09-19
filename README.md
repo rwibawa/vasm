@@ -53,3 +53,9 @@ $ hexdump.exe -C -L a.out
 00007ff0  00 00 00 00 00 00 00 00  00 00 00 00 00 80 00 00  |................|
 00008000
 ```
+
+## 3. Arduino MEGA 2560
+
+* [Docs](https://docs.arduino.cc/hardware/mega-2560)
+* [Prog. Reference](https://www.arduino.cc/reference/en/)
+* [Multiple Serial Ports](https://docs.arduino.cc/built-in-examples/communication/MultiSerialMega)
