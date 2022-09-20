@@ -127,17 +127,16 @@ mingw-w64-x86_64-xa65 /mingw64/share/man/man1/xa.1.gz
 ### Assembling with `xa`
 
 ```sh
-$ xa -c -o blink-xa65.o blink-xa65.asm
+$ xa -c -l blink-xa65.lst -o blink-xa65.o blink-xa65.asm
 
 LGS-NET+WRY@GEO-WCND1383YRS MINGW64 /e/workspace_asm/vasm/vasm/asm (master)
 $ hexdump -C -L blink-xa65.o
-00000000  00 80 a9 ff 8d 02 60 a9  50 8d 00 60 6a a9 55 8d  |......`.P..`j.U.|
-00000010  00 60 4c 0a 80 00 00 00  00 00 00 00 00 00 00 00  |.`L.............|
+00000000  a9 ff 8d 02 60 a9 50 8d  00 60 6a a9 55 8d 00 60  |....`.P..`j.U..`|
+00000010  4c 0a 80 00 00 00 00 00  00 00 00 00 00 00 00 00  |L...............|
 00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
 *
-00007ff0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 80  |................|
-00008000  00 00                                             |..|
-00008002
+00007ff0  00 00 00 00 00 00 00 00  00 00 00 00 00 80 00 00  |................|
+00008000
 ```
 
 ### The assembler directives are:
