@@ -96,6 +96,8 @@ file offs bind size     type def      value    name
 
 * [xa github](https://github.com/fachat/xa65)
 * [xa manual](doc/man-xa.txt)
+* [xa online manual](http://www.floodgap.com/retrotech/xa/xa.1.html)
+* [xa65](http://www.floodgap.com/retrotech/xa/)
 
 ```sh
 $ pacman -S mingw-w64-x86_64-xa65
@@ -121,3 +123,55 @@ mingw-w64-x86_64-xa65 /mingw64/share/man/man1/reloc65.1.gz
 mingw-w64-x86_64-xa65 /mingw64/share/man/man1/uncpk.1.gz
 mingw-w64-x86_64-xa65 /mingw64/share/man/man1/xa.1.gz
 ```
+
+### Assembling with `xa`
+
+```sh
+$ xa -c -o blink-xa65.o blink-xa65.asm
+
+LGS-NET+WRY@GEO-WCND1383YRS MINGW64 /e/workspace_asm/vasm/vasm/asm (master)
+$ hexdump -C -L blink-xa65.o
+00000000  00 80 a9 ff 8d 02 60 a9  50 8d 00 60 6a a9 55 8d  |......`.P..`j.U.|
+00000010  00 60 4c 0a 80 00 00 00  00 00 00 00 00 00 00 00  |.`L.............|
+00000020  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 00  |................|
+*
+00007ff0  00 00 00 00 00 00 00 00  00 00 00 00 00 00 00 80  |................|
+00008000  00 00                                             |..|
+00008002
+```
+
+### The assembler directives are:
+
+- DB defines a byte, in decimal (12), hex ($0C), octal (@14) or binary
+(%00001100) and may also be a character string (enclosed in quotes)
+- DC defines a byte, as above, but with the high bit set (if defining a
+string, only on the last byte of the string)
+- DW defines a word, low byte first, as if an indirect pointer
+- DS allocates a number of bytes without storing any data in them
+
+- ORG sets the location counter to a fixed address
+   *= same as ORG
+- EQU defines a symbol to have a specific value
+   = same as EQU
+
+- INCLUDE causes the file specified to be inserted at this point in the assembly (can be nested if the DOS supports sufficient numbers of files open at once — the object, list and source files are kept open at all times, and each level of nested includes requires one more open file. MYDOS and Atari DOS 2 allow 3 normally, which does not allow a listing and include files. If set to 5, the assembler could generate a listing and handle 1 level of nested
+includes)
+- TITLE specifies the first title line
+- SUBTTL allows entering a second title line
+- PAGE causes the assembler to go to the top of th next listing page
+
+- END terminates the program and specifies INIT and RUN addresses
+
+- LIST a stub for future expansion
+- MACRO another stub (does nothing, not even generate an error)
+- MEND another stub
+
+Octal numbers, EQU, *=, and INIT and RUN addresses may have bugs in them —
+good luck. Most of the rest has been debugged reasonably well.
+
+The END statement can have the following forms:
+
+END no RUN or INIT vectors generated at all
+END ADDR ADDR is the RUN entry point
+END ADDR, ADDR is the INIT entry point (no RUN vector)
+END INIT,RUN both vectors specified
