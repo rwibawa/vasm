@@ -91,3 +91,33 @@ file offs bind size     type def      value    name
 00000028: LOCL 00000000         *ABS*     800a loop
 0000003a: LOCL 00000000         *ABS*     8000 reset
 ```
+
+## 5. Other cross compilers for 6502
+
+* [xa github](https://github.com/fachat/xa65)
+* [xa manual](doc/man-xa.txt)
+
+```sh
+$ pacman -S mingw-w64-x86_64-xa65
+$ pacman -Ql mingw-w64-x86_64-xa65
+mingw-w64-x86_64-xa65 /mingw64/
+mingw-w64-x86_64-xa65 /mingw64/bin/
+mingw-w64-x86_64-xa65 /mingw64/bin/file65.exe
+mingw-w64-x86_64-xa65 /mingw64/bin/ldo65.exe
+mingw-w64-x86_64-xa65 /mingw64/bin/printcbm.exe
+mingw-w64-x86_64-xa65 /mingw64/bin/reloc65.exe
+mingw-w64-x86_64-xa65 /mingw64/bin/uncpk.exe
+mingw-w64-x86_64-xa65 /mingw64/bin/xa.exe
+mingw-w64-x86_64-xa65 /mingw64/share/
+mingw-w64-x86_64-xa65 /mingw64/share/doc/
+mingw-w64-x86_64-xa65 /mingw64/share/doc/xa65/
+mingw-w64-x86_64-xa65 /mingw64/share/doc/xa65/README
+mingw-w64-x86_64-xa65 /mingw64/share/man/
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/file65.1.gz
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/ldo65.1.gz
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/printcbm.1.gz
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/reloc65.1.gz
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/uncpk.1.gz
+mingw-w64-x86_64-xa65 /mingw64/share/man/man1/xa.1.gz
+```

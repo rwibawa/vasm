@@ -1,0 +1,533 @@
+XA(1)                                          General Commands Manual                                          XA(1)
+
+NAME
+       xa - 6502/R65C02/65816 cross-assembler
+
+SYNOPSIS
+       xa [OPTION]... FILE
+
+DESCRIPTION
+       xa is a multi-pass cross-assembler for the 8-bit processors in the 6502 series (such as the 6502, 65C02, 6504,
+       6507, 6510, 7501, 8500, 8501 and 8502), the Rockwell R65C02, and the 16-bit 65816 processor. For a description
+       of syntax, see ASSEMBLER SYNTAX further in this manual page.
+
+OPTIONS
+       -v     Verbose output.
+
+       -C     No CMOS opcodes (default is to allow R65C02 opcodes).
+
+       -W     No 65816 opcodes (default).
+
+       -w     Allow 65816 opcodes.
+
+       -B     Show lines with block open/close (see PSEUDO-OPS).
+
+       -c     Produce  o65  object  files instead of executable files (no linking performed); files may contain unde-
+              fined references.
+
+       -o filename
+              Set output filename. The default is a.o65; use the special filename - to output to standard output.
+
+       -e filename
+              Set errorlog filename, default is none.
+
+       -l filename
+              Set labellist filename, default is none. This is the symbol table and can be used by disassemblers such
+              as dxa(1) to reconstruct source.
+
+       -r     Add cross-reference list to labellist (requires -l).
+
+       -M     Allow  colons  to appear in comments; for MASM compatibility. This does not affect colon interpretation
+              elsewhere.
+
+       -R     Start assembler in relocating mode.
+
+       -Llabel
+              Defines label as an absolute (but undefined) label even when linking.
+
+       -b? addr
+              Set segment base for segment ?  to address addr.  ?  should be t, d, b or z for text, data, bss or zero
+              segments, respectively.
+
+       -A addr
+              Make text segment start at an address such that when the file starts at address addr, relocation is not
+              necessary. Overrides -bt; other segments still have to be taken care of with -b.
+
+       -G     Suppress list of exported globals.
+
+       -DDEF=TEXT
+              Define a preprocessor macro on the command line (see PREPROCESSOR).
+
+       -I dir Add directory dir to the include path (before XAINPUT; see ENVIRONMENT).
+
+       -O charset
+              Define the output charset for character strings. Currently supported are ASCII (default), PETSCII (Com-
+              modore ASCII), PETSCREEN (Commodore screen codes) and HIGH (set high bit on all characters).
+
+       -p?    Set  the  alternative  preprocessor character to ?.  This is useful when you wish to use cpp(1) and the
+              built-in preprocessor at the same time (see PREPROCESSOR).  Characters may need to be quoted  for  your
+              shell (example: -p'~' ).
+
+       --help Show summary of options.
+
+       --version
+              Show version of program.
+
+       The following options are deprecated and will be removed in 2.4 and later versions:
+
+       -x     Use old filename behaviour (overrides -o, -e and -l).
+
+       -S     Allow  preprocessor  substitution  within strings (this is now disallowed for better cpp(1) compatibil-
+              ity).
+
+ASSEMBLER SYNTAX
+       An introduction to 6502 assembly language programming and mnemonics is beyond the scope of this  manual  page.
+       We  invite  you  to investigate any number of the excellent books on the subject; one useful title is "Machine
+       Language For Beginners" by Richard Mansfield (COMPUTE!), covering the Atari, Commodore and  Apple  8-bit  sys-
+       tems, and is widely available on the used market.
+
+       xa  supports  both  the  standard  NMOS  6502  opcodes  as well as the Rockwell CMOS opcodes used in the 65C02
+       (R65C02). With the -w option, xa will also accept opcodes for the 65816. NMOS 6502  undocumented  opcodes  are
+       intentionally  not  supported, and should be entered manually using the .byte pseudo-op (see PSEUDO-OPS).  Due
+       to conflicts between the R65C02 and 65816 instruction sets and undocumented instructions  on  the  NMOS  6502,
+       their use is discouraged.
+
+       In  general, xa accepts the more-or-less standard 6502 assembler format as popularised by MASM and TurboAssem-
+       bler. Values and addresses can be expressed either as literals, or as expressions; to wit,
+
+       123       decimal value
+
+       $234      hexadecimal value
+
+       &123      octal
+
+       %010110   binary
+
+       *         current value of the program counter
+
+       The ASCII value of any quoted character is inserted directly into the program text (example: "A"  inserts  the
+       byte  "A" into the output stream); see also the PSEUDO-OPS section. This is affected by the currently selected
+       character set, if any.
+
+       Labels define locations within the program text, just as in other multi-pass assemblers. A label is defined by
+       anything that is not an opcode; for example, a line such as
+
+              label1 lda #0
+
+       defines label1 to be the current location of the program counter (thus the address of the LDA opcode). A label
+       can be explicitly defined by assigning it the value of an expression, such as
+
+              label2 = $d000
+
+       which defines label2 to be the address $d000, namely, the start of the VIC-II register block on  Commodore  64
+       computers.  The  program  counter  *  is considered to be a special kind of label, and can be assigned to with
+       statements such as
+
+              * = $c000
+
+       which sets the program counter to decimal location 49152. With the exception of the  program  counter,  labels
+       cannot  be assigned multiple times. To explicitly declare redefinition of a label, place a - (dash) before it,
+       e.g.,
+
+              -label2 = $d020
+
+       which sets label2 to the Commodore 64 border colour register. The scope of a label is affected by the block it
+       resides within (see PSEUDO-OPS for block instructions). A label may also be hard-specified with the -L command
+       line option.
+
+       Redefining a label does not change previously assembled code that used the earlier value.  Therefore,  because
+       the program counter is a special type of label, changing the program counter to a lower value does not reorder
+       code assembled previously and changing it to a higher value does not issue padding to put subsequent  code  at
+       the  new location. This is intentional behaviour to facilitate generating relocatable and position-independent
+       code, but can differ from other assemblers which use this behaviour for linking. However, it  is  possible  to
+       use pseudo-ops to simulate other assemblers' behaviour and use xa as a linker; see PSEUDO-OPS and LINKING.
+
+       For  those  instructions  where  the  accumulator is the implied argument (such as asl and lsr; inc and dec on
+       R65C02; etc.), the idiom of explicitly specifying the accumulator with a is unnecessary  as  the  proper  form
+       will be selected if there is no explicit argument. In fact, for consistency with label handling, if there is a
+       label named a, this will actually generate code referencing that label as a memory location and not the  accu-
+       mulator. Otherwise, the assembler will complain.
+
+       Labels and opcodes may take expressions as their arguments to allow computed values, and may themselves refer-
+       ence other labels and/or the program counter. An expression such as lab1+1  (which  operates  on  the  current
+       value  of  label  lab1  and increments it by one) may use the following operands, given from highest to lowest
+       priority:
+
+       *       multiplication (priority 10)
+
+       /       integer division (priority 10)
+
+       +       addition (priority 9)
+
+       -       subtraction (9)
+
+       <<      shift left (8)
+
+       >>      shift right (8)
+
+       >= =>   greater than or equal to (7)
+
+       >       greater than (7)
+
+       <= =<   less than or equal to (7)
+
+       <       less than (7)
+
+       =       equal to (6)
+
+       <> ><   does not equal (6)
+
+       &       bitwise AND (5)
+
+       ^       bitwise XOR (4)
+
+       |       bitwise OR (3)
+
+       &&      logical AND (2)
+
+       ||      logical OR (1)
+
+       Parentheses are valid. When redefining a label, combining arithmetic or bitwise operators with the =  (equals)
+       operator such as += and so on are valid, e.g.,
+
+              -redeflabel += (label12/4)
+
+       Normally, xa attempts to ascertain the value of the operand and (when referring to a memory location) use zero
+       page, 16-bit or (for 65816) 24-bit addressing where appropriate and where supported by the particular  opcode.
+       This generates smaller and faster code, and is almost always preferable.
+
+       Nevertheless,  you  can  use these prefix operators to force a particular rendering of the operand. Those that
+       generate an eight bit result can also be used in 8-bit addressing modes, such as immediate and zero page.
+
+       <      low byte of expression, e.g., lda #<vector
+
+       >      high byte of expression
+
+       !      in situations where the expression could be understood as either an absolute or zero page value, do not
+              attempt  to  optimize  to  a zero page argument for those opcodes that support it (i.e., keep as 16 bit
+              word)
+
+       @      render as 24-bit quantity for 65816 (must specify -w command-line option).  This is required to specify
+              any 24-bit quantity!
+
+       `      force  further  optimization,  even if the length of the instruction cannot be reliably determined (see
+              NOTES'N'BUGS)
+
+       Expressions can occur as arguments to opcodes or within the preprocessor (see PREPROCESSOR  for  syntax).  For
+       example,
+
+              lda label2+1
+
+       takes  the value at label2+1 (using our previous label's value, this would be $d021), and will be assembled as
+       $ad $21 $d0 to disk. Similarly,
+
+              lda #<label2
+
+       will take the lowest 8 bits of label2 (i.e., $20), and assign them to the accumulator (assembling the instruc-
+       tion as $a9 $20 to disk).
+
+       Comments are specified with a semicolon (;), such as
+
+              ;this is a comment
+
+       They  can also be specified in the C language style, using /* */ and // which are understood at the PREPROCES-
+       SOR level (q.v.).
+
+       Normally, the colon (:) separates statements, such as
+
+              label4 lda #0:sta $d020
+
+       or
+
+              label2: lda #2
+
+       (note the use of a colon for specifying a label, similar to some other assemblers, which xa  also  understands
+       with or without the colon). This also applies to semicolon comments, such that
+
+              ; a comment:lda #0
+
+       is  understood  as  a  comment  followed by an opcode. To defeat this, use the -M command line option to allow
+       colons within comments. This does not apply to /* */ and // comments, which are dealt with at the preprocessor
+       level (q.v.).
+
+PSEUDO-OPS
+       Pseudo-ops are false opcodes used by the assembler to denote meta- or inlined commands.  Like most assemblers,
+       xa has a rich set.
+
+       .byt value1,value2,value3,...
+              Specifies a string of bytes to be directly placed into the assembled object.  The arguments may be  ex-
+              pressions. Any number of bytes can be specified.
+
+       .asc "text1" ,"text2",...
+              Specifies  a  character string which will be inserted into the assembled object. Strings are understood
+              according to the currently specified character set; for example, if ASCII is specified,  they  will  be
+              rendered  as  ASCII, and if PETSCII is specified, they will be translated into the equivalent Commodore
+              ASCII equivalent. Other non-standard ASCIIs such as ATASCII for Atari computers should  use  the  ASCII
+              equivalent characters; graphic and control characters should be specified explicitly using .byt for the
+              precise character you want. Note that when specifying the argument of an opcode, .asc is not necessary;
+              the  quoted  character  can  simply  be inserted (e.g., lda #"A" ), and is also affected by the current
+              character set.  Any number of character strings can be specified.
+
+       .byt and .asc are synonymous, so you can mix things such as .byt $43, 22, "a character string" and get the ex-
+       pected  result.  The string is subject to the current character set, but the remaining bytes are inserted wti-
+       hout modification.
+
+       .aasc "text1" ,"text2",...
+              Specifies a character string that is always rendered in true ASCII regardless of the current  character
+              set. Like .asc, it is synonymous with .byt.
+
+       .word value1,value2,value3...
+              Specifies  a string of 16-bit words to be placed into the assembled object in 6502 little-endian format
+              (that is, low-byte/high-byte). The arguments may be expressions. Any number of words can be specified.
+
+       .dsb length,fillbyte
+              Specifies a data block; a total of length repetitions of fillbyte will be inserted into  the  assembled
+              object. For example, .dsb 5,$10 will insert five bytes, each being 16 decimal, into the object. The ar-
+              guments may be expressions. See LINKING for how to use this pseudo-op to link multiple objects.
+
+       .bin offset,length,"filename"
+              Inlines a binary file without further interpretation specified by filename from offset offset to length
+              length.  This allows you to insert data such as a previously assembled object file or an image or other
+              binary data structure, inlined directly into this file's object. If length is zero, then the length  of
+              filename,  minus  the offset, is used instead. The arguments may be expressions. See LINKING for how to
+              use this pseudo-op to link multiple objects.
+
+       .(     Opens a new block for scoping. Within a block, all labels defined are local to that block and any  sub-
+              blocks,  and go out of scope as soon as the enclosing block is closed (i.e., lexically scoped). All la-
+              bels defined outside of the block are still visible within it. To explicitly  declare  a  global  label
+              within  a  block, precede the label with + or precede it with & to declare it within the previous level
+              only (or globally if you are only one level deep). Sixteen levels of scoping are permitted.
+
+       .)     Closes a block.
+
+       .as .al .xs .xl
+              Only relevant in 65816 mode (with the -w option specified). These pseudo-ops set what size  accumulator
+              and X/Y-register should be used for future instructions; .as and .xs set 8-bit operands for the accumu-
+              lator and index registers, respectively, and .al and .xl set 16-bit operands. These pseudo-ops on  pur-
+              pose do not automatically issue sep and rep instructions to set the specified width in the CPU; set the
+              processor bits as you need, or consider constructing a macro.  .al and .xl generate errors if -w is not
+              specified.
+
+       The  following  pseudo-ops  apply primarily to relocatable .o65 objects.  A full discussion of the relocatable
+       format is beyond the scope of this manpage, as it is currently a format in flux. Documentation on the proposed
+       v1.2 format is in doc/fileformat.txt within the xa installation directory.
+
+       .text .data .bss .zero
+              These  pseudo-ops switch between the different segments, .text being the actual code section, .data be-
+              ing the data segment, .bss being uninitialized label space for allocation and .zero being uninitialized
+              zero  page  space  for  allocation.  In .bss and .zero, only labels are evaluated. These pseudo-ops are
+              valid in relative and absolute modes.
+
+       .align value
+              Aligns the current segment to a byte boundary (2, 4 or 256) as specified by value (and places it in the
+              header when relative mode is enabled). Other values generate an error.
+
+       .fopt type,value1,value2,value3,...
+              Acts  like .byt/.asc except that the values are embedded into the object file as file options.  The ar-
+              gument type is used to specify the file option being referenced. A table of these options is in the re-
+              locatable  o65  file  format description. The remainder of the options are interpreted as values to in-
+              sert. Any number of values may be specified, and may also be strings.
+
+PREPROCESSOR
+       xa implements a preprocessor very similar to that of the C-language preprocessor cpp(1) and many oddiments ap-
+       ply to both. For example, as in C, the use of /* */ for comment delimiters is also supported in xa, and so are
+       comments using the double slash //.  The preprocessor also supports continuation  lines,  i.e.,  lines  ending
+       with a backslash (\); the following line is then appended to it as if there were no dividing newline. This too
+       is handled at the preprocessor level.
+
+       For reasons of memory and complexity, the full breadth of the cpp(1) syntax is not fully supported. In partic-
+       ular,  macro  definitions may not be forward-defined (i.e., a macro definition can only reference a previously
+       defined macro definition), except for macro functions, where recursive evaluation is supported; e.g., to  #de-
+       fine WW AA , AA must have already been defined. Certain other directives are not supported, nor are most stan-
+       dard pre-defined macros, and there are other limits on evaluation and line length. Because the maintainers  of
+       xa  recognize that some files will require more complicated preparsing than the built-in preprocessor can sup-
+       ply, the preprocessor will accept cpp(1)-style line/filename/flags output. When these lines are  seen  in  the
+       input  file, xa will treat them as cc would, except that flags are ignored.  xa does not accept files on stan-
+       dard input for parsing reasons, so you should dump your cpp(1) output to an intermediate temporary file,  such
+       as
+
+              cc -E test.s > test.xa
+              xa test.xa
+
+       No special arguments need to be passed to xa; the presence of cpp(1) output is detected automatically.
+
+       Note  that passing your file through cpp(1) may interfere with xa's own preprocessor directives. In this case,
+       to mask directives from cpp(1), use the -p option to specify an alternative character instead of  #,  such  as
+       the  tilde (e.g., -p'~' ). With this option and argument specified, then instead of #include, for example, you
+       can also use ~include, in addition to #include (which will also still be accepted by the xa preprocessor,  as-
+       suming  any survive cpp(1)).  Any character can be used, although frankly pathologic choices may lead to amus-
+       ing and frustrating glitches during parsing.  You can also use this option to  defer  preprocessor  directives
+       that cpp(1) may interpret too early until the file actually gets to xa itself for processing.
+
+       The following preprocessor directives are supported.
+
+       #include "filename"
+              Inserts  the contents of file filename at this position. If the file is not found, it is searched using
+              paths specified by the -I command line option or the environment  variable  XAINPUT  (q.v.).  When  in-
+              serted, the file will also be parsed for preprocessor directives.
+
+       #echo comment
+              Inserts comment comment into the errorlog file, specified with the -e command line option.
+
+       #print expression
+              Computes the value of expression expression and prints it into the errorlog file.
+
+       #define DEFINE text
+              Equates  macro  DEFINE with text text such that wherever DEFINE appears in the assembly source, text is
+              substituted in its place (just like cpp(1) would do). In addition, #define can specify macro  functions
+              like  cpp(1)  such that a directive like #define mult(a,b) ((a)*(b)) would generate the expected result
+              wherever an expression of the form mult(a,b) appears in the source. This can also be specified  on  the
+              command line with the -D option. The arguments of a macro function may be recursively evaluated, unlike
+              other #defines; the preprocessor will attempt to re-evaluate any argument refencing another  preproces-
+              sor definition up to ten times before complaining.
+
+       The  following  directives are conditionals. If the conditional is not satisfied, then the source code between
+       the directive and its terminating #endif are expunged and not assembled. Up to fifteen levels of  nesting  are
+       supported.
+
+       #endif Closes a conditional block.
+
+       #else  Implements alternate path for a conditional block.
+
+       #ifdef DEFINE
+              True only if macro DEFINE is defined.
+
+       #ifndef DEFINE
+              The opposite; true only if macro DEFINE has not been previously defined.
+
+       #if expression
+              True if expression expression evaluates to non-zero.  expression may reference other macros.
+
+       #iflused label
+              True  if  label label has been used (but not necessarily instantiated with a value).  This works on la-
+              bels, not macros!
+
+       #ifldef label
+              True if label label is defined and assigned with a value.  This works on labels, not macros!
+
+       Unclosed conditional blocks at the end of included files generate warnings; unclosed conditional blocks at the
+       end of assembly generate an error.
+
+       #iflused  and  #ifldef  are useful for building up a library based on labels. For example, you might use some-
+       thing like this in your library's code:
+
+              #iflused label
+              #ifldef label
+              #echo label already defined, library function label cannot be inserted
+              #else
+              label /* your code */
+              #endif
+              #endif
+
+LINKING
+       xa is oriented towards generating sequential binaries. Code is strictly emitted in order even if  the  program
+       counter is set to a lower location than previously assembled code, and padding is not automatically emitted if
+       the program counter is set to a higher location. Changing the program location only  changes  new  labels  for
+       code that is subsequently emitted; previous emitted code remains unchanged. Fortunately, for many object files
+       these conventions have no effect on their generation.
+
+       However, some applications may require generating an object file built from several previously generated  com-
+       ponents,  and/or  submodules which may need to be present at specific memory locations. With a minor amount of
+       additional specification, it is possible to use xa for this purpose as well.
+
+       The first means of doing so uses the o65 format to make relocatable objects that in  turn  can  be  linked  by
+       ldo65(1) (q.v.).
+
+       The  second  means  involves either assembled code, or insertion of previously built object or data files with
+       .bin, using .dsb pseudo-ops with computed expression arguments to insert any necessary padding  between  them,
+       in the sequential order they are to reside in memory. Consider this example:
+
+           .word $1000
+           * = $1000
+
+           ; this is your code at $1000
+       part1       rts
+           ; this label marks the end of code
+       endofpart1
+
+           ; DON'T PUT A NEW .word HERE!
+           * = $2000
+           .dsb (*-endofpart1), 0
+           ; yes, set it again
+           * = $2000
+
+           ; this is your code at $2000
+       part2       rts
+
+       This  example,  written for Commodore microcomputers using a 16-bit starting address, has two "modules" in it:
+       one block of code at $1000 (4096), indicated by the code between labels part1 and  endofpart1,  and  a  second
+       block at $2000 (8192) starting at label part2.
+
+       The padding is computed by the .dsb pseudo-op between the two modules. Note that the program counter is set to
+       the new address and then a computed expression inserts the proper number of fill bytes from the end of the as-
+       sembled  code in part 1 up to the new program counter address. Since this itself advances the program counter,
+       the program counter is reset again, and assembly continues.
+
+       When the object this source file generates is loaded, there will be an rts instruction at address 4096 and an-
+       other at address 8192, with null bytes between them.
+
+       Should  one  of  these  areas  need  to  contain a pre-built file, instead of assembly code, simply use a .bin
+       pseudo-op to load whatever portions of the file are required into the output. The computation of addresses and
+       number of necessary fill bytes is done in the same fashion.
+
+       Although this example used the program counter itself to compute the difference between addresses, you can use
+       any label for this purpose, keeping in mind that only the program counter determines where relative  addresses
+       within assembled code are resolved.
+
+ENVIRONMENT
+       xa utilises the following environment variables, if they exist:
+
+       XAINPUT
+              Include file path; components should be separated by `,'.
+
+       XAOUTPUT
+              Output file path.
+
+NOTES'N'BUGS
+       The  R65C02  instructions  ina (often rendered inc a) and dea (dec a) must be rendered as bare inc and dec in-
+       structions respectively.
+
+       The 65816 instructions mvn and mvp use two eight bit parameters, the only instructions in the entire  instruc-
+       tion  set to do so. Older versions of xa took a single 16-bit absolute value. Since 2.3.7, the standard syntax
+       is now accepted and the old syntax is deprecated (a warning will be generated).
+
+       Forward-defined labels -- that is, labels that are defined after the current instruction is processed --  can-
+       not  be optimized into zero page instructions even if the label does end up being defined as a zero page loca-
+       tion, because the assembler does not know the value of the label in advance during the  first  pass  when  the
+       length  of  an  instruction is computed. On the second pass, a warning will be issued when an instruction that
+       could have been optimized can't be because of this limitation.  (Obviously, this does not apply  to  branching
+       or  jumping  instructions because they're not optimizable anyhow, and those instructions that can only take an
+       8-bit parameter will always be casted to an 8-bit quantity.)  If the label cannot otherwise be  defined  ahead
+       of  the instruction, the backtick prefix ` may be used to force further optimization no matter where the label
+       is defined as long as the instruction supports it.  Indiscriminately forcing the issue  can  be  fraught  with
+       peril,  however,  and is not recommended; to discourage this, the assembler will complain about its use in ad-
+       dressing mode situations where no ambiguity exists, such as indirect indexed, branching and so on.
+
+       Also, as a further consequence of the way optimization is managed, we repeat that all  24-bit  quantities  and
+       labels  that  reference  a  24-bit quantity in 65816 mode, anteriorly declared or otherwise, MUST be prepended
+       with the @ prefix. Otherwise, the assembler will attempt to optimize to 16 bits, which may be undesirable.
+
+IMMINENT DEPRECATION
+       The following options and modes will be REMOVED in 2.4 and later versions of xa:
+
+       -x
+
+       -S
+
+       the original mvn $xxxx syntax
+
+SEE ALSO
+       file65(1), ldo65(1), printcbm(1), reloc65(1), uncpk(1), dxa(1)
+
+AUTHOR
+       This manual page was written by David Weinehall <tao@acc.umu.se>, Andre  Fachat  <fachat@web.de>  and  Cameron
+       Kaiser <ckaiser@floodgap.com>.  Original xa package (C)1989-1997 Andre Fachat. Additional changes (C)1989-2021
+       Andre Fachat, Jolse Maginnis, David Weinehall, Cameron Kaiser. The official maintainer is Cameron Kaiser.
+
+30 YEARS OF XA
+       Yay us?
+
+WEBSITE
+       http://www.floodgap.com/retrotech/xa/
+
+                                                   24 November 2021                                             XA(1)
