@@ -1,6 +1,6 @@
 # vasm
 
-A portable and retargetable assembler.
+A portable and retargetable assembler. Use it for assembling 6202 CPU module on MS-Windows 10.
 
 * [vasm](http://sun.hasenbraten.de/vasm)
 * [Compilation Instructions](http://sun.hasenbraten.de/vasm/index.php?view=compile)
@@ -59,3 +59,35 @@ $ hexdump.exe -C -L a.out
 * [Docs](https://docs.arduino.cc/hardware/mega-2560)
 * [Prog. Reference](https://www.arduino.cc/reference/en/)
 * [Multiple Serial Ports](https://docs.arduino.cc/built-in-examples/communication/MultiSerialMega)
+
+## 4. Diassembler
+
+```sh
+# vobj output module
+$ ../bin/vasm6502_oldstyle_win32.exe -Fvobj -dotdir -o blink.o blink.s
+
+# use vobjdump to disassemble
+$ ../bin/vobjdump_win32.exe blink.o
+
+------------------------------------------------------------------------------
+VOBJ 6502 (little endian), 8 bits per byte, 2 bytes per word.
+4 symbols.
+2 sections.
+
+------------------------------------------------------------------------------
+0000004d: SECTION "seg8000" (attributes="acrwx")
+Flags: 11        Alignment: 1      Total size: 19        File size: 19
+
+------------------------------------------------------------------------------
+00000073: SECTION "segfffc" (attributes="acrwx")
+Flags: 10        Alignment: 1      Total size: 4         File size: 4
+
+
+------------------------------------------------------------------------------
+SYMBOL TABLE
+file offs bind size     type def      value    name
+0000000e: LOCL 00000000 sect  seg8000        0 seg8000
+0000001b: LOCL 00000000 sect  segfffc        0 segfffc
+00000028: LOCL 00000000         *ABS*     800a loop
+0000003a: LOCL 00000000         *ABS*     8000 reset
+```
